@@ -1,10 +1,12 @@
 // Importing Mongoose
 const mongoose = require('mongoose');
 
+// User schema
 const userSchema = new mongoose.Schema({
     googleId: {type: String, unique: true},
     name: String,
     email: {type: String, unique: true},
+    // Array to store user's mood history
     moodHistory: [{
         date: {type: Date, default: Date.now},
         mood: String,
@@ -17,6 +19,7 @@ const userSchema = new mongoose.Schema({
             imageUrl: String
         }]
     }],
+    // Array to store user's favorite tracks
     favorites: [{
         id: String,
         title: String,
@@ -25,4 +28,5 @@ const userSchema = new mongoose.Schema({
     }]
 });
 
+// Exporting the user model
 module.exports = mongoose.model('User', userSchema);
