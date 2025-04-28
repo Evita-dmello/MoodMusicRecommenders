@@ -48,7 +48,7 @@ passport.use(new GoogleStrategy({
 passport.serializeUser((user, done) => done(null, user.id));
 
 // Deserialize user from the session using the ID
-passport.deserializeUser((id, done) => User.findByID(id, (err, user) => done(err, user)));
+passport.deserializeUser((id, done) => User.findById(id, (err, user) => done(err, user)));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
