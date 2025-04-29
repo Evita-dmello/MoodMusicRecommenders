@@ -1,11 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Select Your Mood</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-    <link href="../css/styles.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        
+        .mood-container {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+        
+        .dropbtn {
+            background-color: #006bff;
+            color: white;
+            padding: 16px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 auto;
+        }
+        
+        .dropbtn:hover {
+            background-color: #0056d6;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            width: 100%;
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .show {
+            display: block;
+        }
+        
+        .next-btn {
+            background-color: #006bff;
+            color: white;
+            padding: 16px 32px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: none;
+            margin: 0 auto;
+        }
+        
+        .next-btn:hover {
+            background-color: #0056d6;
+            transform: translateY(-2px);
+        }
+        
+        .emoji {
+            font-size: 20px;
+            width: 25px;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            .mood-container {
+                padding: 20px;
+                width: 85%;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
 </head>
-<body></body>
+<body>
+    <div class="mood-container">
+        <h2>How are you feeling today?</h2>
+        
+        <div class="dropdown">
+            <button onclick="toggleDropdown()" class="dropbtn" id="moodButton">
+                <span id="selectedMood">Select your mood</span>
+                <span>▼</span>
+            </button>
+            <div id="moodDropdown" class="dropdown-content">
+                <a href="#" onclick="selectMood('anger', '😠 Anger')"><span class="emoji">😠</span> Anger</a>
+                <a href="#" onclick="selectMood('fear', '😨 Fear')"><span class="emoji">😨</span> Fear</a>
+                <a href="#" onclick="selectMood('happiness', '😊 Happiness')"><span class="emoji">😊</span> Happiness</a>
+                <a href="#" onclick="selectMood('sadness', '😢 Sadness')"><span class="emoji">😢</span> Sadness</a>
+                <a href="#" onclick="selectMood('surprise', '😮 Surprise')"><span class="emoji">😮</span> Surprise</a>
+                <a href="#" onclick="selectMood('joy', '😄 Joy')"><span class="emoji">😄</span> Joy</a>
+                <a href="#" onclick="selectMood('irritation', '😤 Irritation')"><span class="emoji">😤</span> Irritation</a>
+                <a href="#" onclick="selectMood('anxiety', '😰 Anxiety')"><span class="emoji">😰</span> Anxiety</a>
+                <a href="#" onclick="selectMood('worry', '😟 Worry')"><span class="emoji">😟</span> Worry</a>
+                <a href="#" onclick="selectMood('frustration', '🤬 Frustration')"><span class="emoji">🤬</span> Frustration</a>
+                <a href="#" onclick="selectMood('stressed', '😫 Stressed')"><span class="emoji">😫</span> Stressed</a>
+                <a href="#" onclick="selectMood('shocked', '😱 Shocked')"><span class="emoji">😱</span> Shocked</a>
+                <a href="#" onclick="selectMood('loneliness', '😔 Loneliness')"><span class="emoji">😔</span> Loneliness</a>
+                <a href="#" onclick="selectMood('crying', '😭 Crying')"><span class="emoji">😭</span> Crying</a>
+                <a href="#" onclick="selectMood('disgust', '🤢 Disgust')"><span class="emoji">🤢</span> Disgust</a>
+                <a href="#" onclick="selectMood('love', '❤️ Love')"><span class="emoji">❤️</span> Love</a>
+            </div>
+        </div>
+        
+        <button class="next-btn" id="nextBtn" onclick="goToGenres()">Next </button>
+    </div>
+
+    <script>
+        let selectedMood = null;
+        
+        function toggleDropdown() {
+            document.getElementById("moodDropdown").classList.toggle("show");
+        }
+        
+        function selectMood(mood, displayText) {
+            selectedMood = mood;
+            document.getElementById("selectedMood").textContent = displayText;
+            document.getElementById("nextBtn").style.display = "block";
+            toggleDropdown();
+        }
+        
+        function goToGenres() {
+            if (selectedMood) {
+                window.location.href = "genre.html?mood=" + selectedMood;
+            }
+        }
+        
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
 </html>
