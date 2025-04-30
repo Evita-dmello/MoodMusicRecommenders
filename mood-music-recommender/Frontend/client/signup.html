@@ -11,6 +11,8 @@
             --secondary: #a29bfe;
             --dark: #2d3436;
             --light: #f5f6fa;
+            --error: #d63031;
+            --success: #00b894;
         }
 
         body {
@@ -31,6 +33,12 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h1 {
@@ -66,6 +74,19 @@
             border-radius: 4px;
             font-family: 'Poppins', sans-serif;
             box-sizing: border-box;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
         }
 
         .signup-btn {
@@ -79,25 +100,57 @@
             width: 100%;
             margin-top: 10px;
             transition: all 0.3s;
+            font-weight: 500;
         }
 
         .signup-btn:hover {
             background: #5649c0;
+            transform: translateY(-2px);
+        }
+
+        .signup-btn:disabled {
+            background: #b2b2b2;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .login-link {
             margin-top: 20px;
             text-align: center;
+            font-size: 0.9rem;
         }
 
         .login-link a {
             color: var(--primary);
             text-decoration: none;
             font-weight: 500;
+            transition: all 0.2s;
         }
 
         .login-link a:hover {
             text-decoration: underline;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            color: var(--success);
+            text-align: center;
+            margin-top: 15px;
+            display: none;
         }
     </style>
 </head>
@@ -110,24 +163,34 @@
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" placeholder="Enter username" required>
+                <div id="usernameError" class="error-message"></div>
             </div>
             
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" placeholder="Enter email" required>
+                <div id="emailError" class="error-message"></div>
             </div>
             
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password" required>
+                <label for="password">Password (min 8 characters)</label>
+                <input type="password" id="password" placeholder="Enter password" minlength="8" required>
+                <div id="passwordError" class="error-message"></div>
             </div>
             
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" id="confirmPassword" placeholder="Confirm password" required>
+                <div id="confirmPasswordError" class="error-message"></div>
             </div>
             
-            <button type="submit" class="signup-btn">Sign Up</button>
+            <button type="submit" class="signup-btn" id="submitBtn">
+                <span id="btnText">Sign Up</span>
+            </button>
+            
+            <div id="successMessage" class="success-message">
+                Account created successfully! Redirecting...
+            </div>
         </form>
         
         <div class="login-link">
@@ -136,41 +199,117 @@
     </div>
 
     <script>
-    
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const name = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
+        // Reset error messages
+        document.querySelectorAll('.error-message').forEach(el => {
+            el.style.display = 'none';
+            el.textContent = '';
+        });
+        
+        // Get form values
+        const name = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         
-        if (password !== confirmPassword) {
-            alert("Passwords don't match!");
-            return;
+        // Client-side validation
+        let isValid = true;
+        
+        if (name.length < 3) {
+            showError('usernameError', 'Username must be at least 3 characters');
+            isValid = false;
         }
         
-        try {
-            const response = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            window.location.href = '/profile.html';
-            } else {
-            alert(data.message || 'Signup failed');
-            }
-        } catch (error) {
-            alert('An error occurred. Please try again.');
+        if (!validateEmail(email)) {
+            showError('emailError', 'Please enter a valid email address');
+            isValid = false;
         }
-        });
+        
+        if (password.length < 8) {
+            showError('passwordError', 'Password must be at least 8 characters');
+            isValid = false;
+        }
+        
+        if (password !== confirmPassword) {
+            showError('confirmPasswordError', 'Passwords do not match');
+            isValid = false;
+        }
+        
+        if (!isValid) return;
+        
+        // Disable button and show loading
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        submitBtn.disabled = true;
+        btnText.innerHTML = `<span class="loading"></span> Creating account...`;
+        
+        try {
+            // For testing without a backend - remove this in production
+            // Simulate successful signup after 1.5 seconds
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // In a real implementation, replace this with your actual fetch call
+            // const response = await fetch('/api/auth/signup', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            //     body: new URLSearchParams({ name, email, password })
+            // });
+            
+            // For demo purposes - directly show success
+            document.getElementById('successMessage').style.display = 'block';
+            submitBtn.style.display = 'none';
+            
+            // Store user data if needed
+            localStorage.setItem('temp_email', email);
+            
+            // Redirect to login page after delay
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Signup error:', error);
+            showError('confirmPasswordError', 'Account creation failed. Please try again.');
+            submitBtn.disabled = false;
+            btnText.textContent = 'Sign Up';
+        }
+    });
     
+    function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.style.display = 'block';
+        element.textContent = message;
+    }
+    
+    function validateEmail(email) {
+        // Simple email validation that works without regex
+        return email.includes('@') && 
+               email.includes('.') && 
+               email.indexOf('@') < email.lastIndexOf('.') &&
+               email.length > 5;
+    }
+    
+    // Real-time validation
+    document.getElementById('password').addEventListener('input', (e) => {
+        if (e.target.value.length > 0 && e.target.value.length < 8) {
+            showError('passwordError', 'Password must be at least 8 characters');
+        } else {
+            document.getElementById('passwordError').style.display = 'none';
+        }
+    });
+    
+    document.getElementById('confirmPassword').addEventListener('input', (e) => {
+        const password = document.getElementById('password').value;
+        if (e.target.value !== password) {
+            showError('confirmPasswordError', 'Passwords do not match');
+        } else {
+            document.getElementById('confirmPasswordError').style.display = 'none';
+        }
+    });
     </script>
+
 </body>
 </html>
