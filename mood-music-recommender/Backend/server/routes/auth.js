@@ -27,7 +27,7 @@ passport.use(new GoogleStrategy({
 router.get('/google',
   passport.authenticate('google', { 
     scope: ['profile', 'email'],
-    prompt: 'select_account' // Added for better UX
+    prompt: 'select_account' 
   }));
 
 router.get('/google/callback', 
@@ -44,7 +44,7 @@ router.get('/google/callback',
 router.get('/logout', (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
-    req.session.destroy(); // Clear session
+    req.session.destroy(); 
     res.redirect('/');
   });
 });
