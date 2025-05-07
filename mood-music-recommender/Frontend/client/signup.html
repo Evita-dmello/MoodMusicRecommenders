@@ -247,18 +247,9 @@
         btnText.innerHTML = `<span class="loading"></span> Creating account...`;
         
         try {
-            // For testing without a backend - remove this in production
-            // Simulate successful signup after 1.5 seconds
+            
             await new Promise(resolve => setTimeout(resolve, 1500));
             
-            // In a real implementation, replace this with your actual fetch call
-            // const response = await fetch('/api/auth/signup', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            //     body: new URLSearchParams({ name, email, password })
-            // });
-            
-            // For demo purposes - directly show success
             document.getElementById('successMessage').style.display = 'block';
             submitBtn.style.display = 'none';
             
