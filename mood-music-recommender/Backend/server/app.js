@@ -6,7 +6,7 @@ const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
-const User = require('./models/User'); // ADDED: Import User model
+const User = require('./models/User'); 
 
 // Initialize Express app
 const app = express();
@@ -45,7 +45,6 @@ passport.use(new GoogleStrategy({
 }, 
 async (accessToken, refreshToken, profile, done) => {
   try {
-    // ADDED try-catch and await/async
     let user = await User.findOne({ googleId: profile.id });
     
     if (!user) {
@@ -57,14 +56,13 @@ async (accessToken, refreshToken, profile, done) => {
       await user.save();
     }
     
-    // ADDED JWT token generation
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
     
-    user.token = token; // Attach token to user
+    user.token = token; 
     return done(null, user);
   } catch (err) {
     return done(err);
@@ -74,7 +72,7 @@ async (accessToken, refreshToken, profile, done) => {
 passport.serializeUser((user, done) => {
   done(null, {
     id: user.id,
-    token: user.token // Include token in session
+    token: user.token 
   });
 });
 
@@ -87,7 +85,7 @@ passport.deserializeUser(async (obj, done) => {
   }
 });
 
-// Route Setup - MOVED BELOW passport config
+// Route Setup 
 const authRouter = require('./routes/auth');
 const musicRouter = require('./routes/music');
 const userRouter = require('./routes/user');
